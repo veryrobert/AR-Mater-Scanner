@@ -70,6 +70,19 @@ async function saveFile(blob: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000)
 }
 
+// Email: on phones the share sheet attaches the image and the text (pick Mail); elsewhere a mailto
+// link opens a draft with the text, and the image is saved so it can be attached.
+async function emailScan(image: Blob | null, text: string) {
+  const subject = `Scan ${new Date().toLocaleDateString()}`
+  const files = image ? [new File([image], `scan-${stamp()}.png`, { type: 'image/png' })] : []
+  if (files.length && navigator.canShare?.({ files, text })) {
+    try { await navigator.share({ files, title: subject, text }); return } catch (e) { if ((e as Error).name === 'AbortError') return }
+  }
+  if (image) await saveFile(image, `scan-${stamp()}.png`)
+  const body = text.length > 1800 ? `${text.slice(0, 1800)}…` : text // keep the link within mail clients' limits
+  location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
 
 export default function App() {
@@ -400,6 +413,7 @@ export default function App() {
           <FieldGroup>
             <Button variant="secondary" disabled={phase !== 'result'} onClick={async () => { const b = await exportInk(); if (b) await saveFile(b as Blob, `scan-${stamp()}.png`) }}>Image</Button>
             <Button variant="secondary" disabled={!reading.text} onClick={() => saveFile(new Blob([reading.text], { type: 'text/plain' }), `scan-${stamp()}.txt`)}>Text</Button>
+            <Button variant="secondary" disabled={phase !== 'result'} onClick={async () => { await emailScan((await exportInk()) as Blob | null, reading.text) }}>Email</Button>
             <Button variant="secondary" disabled={phase !== 'result'} onClick={async () => { const p = await exportInk(true); if (p) await saveFile(await thumbnail(p as HTMLCanvasElement), 'thumbnail.png') }}>Thumbnail</Button>
           </FieldGroup>
         </>)}

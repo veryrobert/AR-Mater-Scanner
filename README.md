@@ -16,7 +16,7 @@ Put one at each corner of the area to capture. Each is a blue sticky note with a
 - **Capture**: available once all 4 markers are found. **Your photo** straightens an existing picture instead.
 - **Scan**: choose where to crop (the markers' outer corners, their centres or their inner corners) and turn on auto capture, which takes the photo once the markers have stayed still.
 - **Settings**: your Claude API key. The key is stored only in this browser and sent straight to the Claude API.
-- **Export**: save the ink as a PNG (white or transparent background), the text as a .txt file, or the index thumbnail.
+- **Export**: save the ink as a PNG (white or transparent background), the text as a .txt file, or the index thumbnail. **Email** opens the share sheet on phones, so you can pick Mail and send the image and text together. On a computer it opens a draft email with the text and saves the image for you to attach.
 
 ## Run
 
