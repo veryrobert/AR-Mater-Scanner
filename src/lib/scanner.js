@@ -189,7 +189,8 @@
       if (!quad) continue;
       const qArea = polyArea(quad), hArea = polyArea(hull);
       if (qArea < minSide * minSide) continue;
-      if (qArea / hArea < 0.84) { rej(c, '(qArea / hArea < 0.84)'); continue; } // outline isn't a quadrilateral
+      const quadF = qArea / hArea;
+      if (quadF < 0.84) { rej(c, '(quadF < 0.84)'); continue; } // outline isn't a quadrilateral
 
       const sides = [0, 1, 2, 3].map(i => dist(quad[i], quad[(i + 1) % 4]));
       if (Math.max(...sides) / Math.min(...sides) > 2.5) { rej(c, '(Math.max(...sides) / Math.min(...sides) > 2.5)'); continue; }
@@ -228,14 +229,7 @@
         }
       }
       const ownC = ownCenter / nCenter, darkC = darkCenter / nCenter, edgeF = ownEdge / nEdge, gapF = lightGap / nGap;
-      // The glyph may be its own component or, where it touches the frame, part of it
-      const glyph = ownC + darkC;
-      if (ownC > 0.6) { rej(c, '(ownC > 0.6)'); continue; }              // must be a ring, not a blob
-      if (edgeF < 0.5) { rej(c, '(edgeF < 0.5)'); continue; }            // border must be mostly solid
-      if (glyph < 0.12 || glyph > 0.95) { rej(c, '(glyph < 0.12 || glyph > 0.95)'); continue; } // glyph inside
-      if (gapF < (ownC > 0.08 ? 0.4 : 0.25)) { rej(c, '(gapF too low)'); continue; } // a touching glyph needs a clear gap elsewhere
-
-      // Blue backing (soft score): sample a band just outside the frame
+      // Blue backing: sample a band just outside the frame
       let blue = 0, nb = 0;
       const cx = (quad[0].x + quad[1].x + quad[2].x + quad[3].x) / 4;
       const cy = (quad[0].y + quad[1].y + quad[2].y + quad[3].y) / 4;
@@ -252,6 +246,12 @@
         }
       }
       const blueF = nb ? blue / nb : 0;
+      // Strict: a clean ring with a separate glyph inside. Loose (glyph touching the frame,
+      // wobbly or broken outline) only on a blue note, so ticked boxes on a form don't pass.
+      const glyph = ownC + darkC;
+      const strict = quadF >= 0.88 && ownC <= 0.08 && edgeF >= 0.6 && darkC >= 0.12 && darkC <= 0.95 && gapF >= 0.25;
+      const loose = blueF >= 0.35 && ownC <= 0.6 && edgeF >= 0.5 && glyph >= 0.12 && glyph <= 0.95 && gapF >= (ownC > 0.08 ? 0.4 : 0.25);
+      if (!strict && !loose) { rej(c, 'not a marker'); continue; }
 
       // Orient quad clockwise (y-down) starting from top-left-most corner
       let q = quad.slice();
@@ -289,6 +289,8 @@
 
   function selectFour(markers) {
     if (markers.length < 4) return null;
+    const onBlue = markers.filter(m => m.blue >= 0.35);
+    if (onBlue.length >= 4) markers = onBlue;
     const cand = markers.slice().sort((a, b) => b.score - a.score).slice(0, 10);
     let best = null, bestScore = -Infinity;
     const n = cand.length;

@@ -234,7 +234,7 @@ export default function App() {
     const ink = css.getPropertyValue('--foreground').trim() || '#ecebe8'
     const red = css.getPropertyValue('--marker').trim() || '#ff3b30'
     let raf = 0, last = 0
-    // Markers seen in recent frames, so one missed frame doesn't drop a marker
+    // The last chosen four, kept a few frames so one missed frame doesn't drop a marker
     let held: { m: Marker; age: number }[] = []
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick)
@@ -247,11 +247,14 @@ export default function App() {
       small.height = Math.round(vh * k)
       sg.drawImage(v, 0, 0, small.width, small.height)
       const seen = detectMarkers(sg.getImageData(0, 0, small.width, small.height))
-      held = held.filter(h => !seen.some(m => Math.hypot(m.center.x - h.m.center.x, m.center.y - h.m.center.y) < Math.max(m.size, h.m.size) * 0.8))
-      held = [...seen.map(m => ({ m, age: 0 })), ...held.map(h => ({ m: h.m, age: h.age + 1 })).filter(h => h.age <= HOLD)]
-      const markers = held.map(h => h.m)
+      held = held
+        .filter(h => !seen.some(m => Math.hypot(m.center.x - h.m.center.x, m.center.y - h.m.center.y) < Math.max(m.size, h.m.size) * 0.8))
+        .map(h => ({ m: h.m, age: h.age + 1 }))
+        .filter(h => h.age <= HOLD)
+      const markers = [...seen, ...held.map(h => h.m)]
       const four = selectFour(markers)
-      setFound(four ? 4 : Math.min(3, markers.length))
+      if (four) held = four.map(m => ({ m, age: held.find(h => h.m === m)?.age ?? 0 }))
+      setFound(four ? 4 : Math.min(3, seen.length))
 
       // overlay (video is object-fit: contain)
       const dpr = devicePixelRatio || 1
@@ -278,11 +281,10 @@ export default function App() {
         g.closePath(); g.fill('evenodd')
         path(boardCorners(four, cropRef.current)); line(1.5)
       }
-      for (const m of markers) {
-        g.globalAlpha = four?.includes(m) ? 1 : 0.6
+      // Red outline on each marker picked up: the chosen four, or the best three while searching
+      for (const m of four ?? seen.slice().sort((a, b) => b.score - a.score).slice(0, 3)) {
         path(m.corners); line(2.5, red)
       }
-      g.globalAlpha = 1
 
       const L = live.current
       if (four) {
