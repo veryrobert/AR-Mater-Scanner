@@ -5,6 +5,7 @@
 - Rebuilt on the starter template (React, Vite, shadcn shell), dimming everything outside the capture area
 - Ink view removes paper, shadows and markers; Text view transcribes with the Claude API using the viewer's own key
 - Export ink as PNG (white or clear), text as .txt, or the index thumbnail
+- Export can email the scan (share sheet, or a mailto draft)
 - Named mater, served from mater.robertfarrelly.com; README covers markers and files
 
 ## 2026-10-18 — Thumbnail export
