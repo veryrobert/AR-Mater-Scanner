@@ -7,6 +7,10 @@ Point your phone at a board marked with the four corner markers (a black square 
 
 Built on `veryrobert/starter`: React, Vite, Tailwind, shadcn. Style rules are in `CLAUDE.md`.
 
+## Markers
+
+Put one at each corner of the area to capture. Each is a blue sticky note with a thick black square drawn on it and a solid black shape inside the square. Hand-drawn is fine. The shape inside can be any solid blob, but it mustn't touch the square. The camera needs all four in view.
+
 ## Use
 
 - **Capture**: available once all 4 markers are found. **Your photo** straightens an existing picture instead.
@@ -34,3 +38,10 @@ Phones only allow camera access over HTTPS. The Pages workflow deploys from `mai
 5. For the ink view: even out the lighting, turn the paper transparent, and cut out each marker and its sticky note.
 
 `src/lib/transcribe.ts` sends the straightened photo to `claude-opus-5-5` and streams the text back.
+
+## Files
+
+- `src/App.tsx`: camera, live overlay, panels and toolbar
+- `src/lib/scanner.js` (+ `scanner.d.ts`): marker detection, straightening, ink extraction
+- `src/lib/transcribe.ts`: Claude API call
+- `src/components/shell/`: the starter's shared shell
