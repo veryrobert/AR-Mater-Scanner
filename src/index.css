@@ -73,6 +73,7 @@
     --accent-foreground: #ecebe8;
     --destructive: #f07a6a;
     --warning: #f0c46a;
+    --marker: #ff3b30; /* a marker the camera has found */
     --border: rgb(255 255 255 / 0.08);
     --input: rgb(255 255 255 / 0.1);
     --ring: rgb(236 235 232 / 0.6);

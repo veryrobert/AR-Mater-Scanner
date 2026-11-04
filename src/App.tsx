@@ -29,7 +29,8 @@ type PanelId = (typeof panels)[number]['id']
 type Shot = { full: ImageData; four: Marker[]; scale: number }
 type Reading = { state: 'idle' | 'reading' | 'done' | 'error'; text: string; error?: string }
 
-const LIVE_DIM = 480 // live detection size
+const LIVE_DIM = 640 // live detection size
+const HOLD = 6 // frames a marker is kept after it was last seen
 const SHOT_DIM = 800 // detection size for a captured frame
 const KEY = 'scanner.apiKey'
 
@@ -229,8 +230,12 @@ export default function App() {
     if (phase !== 'camera') return
     const small = document.createElement('canvas')
     const sg = small.getContext('2d', { willReadFrequently: true })!
-    const ink = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim() || '#ecebe8'
+    const css = getComputedStyle(document.documentElement)
+    const ink = css.getPropertyValue('--foreground').trim() || '#ecebe8'
+    const red = css.getPropertyValue('--marker').trim() || '#ff3b30'
     let raf = 0, last = 0
+    // Markers seen in recent frames, so one missed frame doesn't drop a marker
+    let held: { m: Marker; age: number }[] = []
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick)
       const v = video.current, o = overlay.current
@@ -241,7 +246,10 @@ export default function App() {
       small.width = Math.round(vw * k)
       small.height = Math.round(vh * k)
       sg.drawImage(v, 0, 0, small.width, small.height)
-      const markers = detectMarkers(sg.getImageData(0, 0, small.width, small.height))
+      const seen = detectMarkers(sg.getImageData(0, 0, small.width, small.height))
+      held = held.filter(h => !seen.some(m => Math.hypot(m.center.x - h.m.center.x, m.center.y - h.m.center.y) < Math.max(m.size, h.m.size) * 0.8))
+      held = [...seen.map(m => ({ m, age: 0 })), ...held.map(h => ({ m: h.m, age: h.age + 1 })).filter(h => h.age <= HOLD)]
+      const markers = held.map(h => h.m)
       const four = selectFour(markers)
       setFound(four ? 4 : Math.min(3, markers.length))
 
@@ -259,9 +267,9 @@ export default function App() {
         g.closePath()
       }
       // Dim everything outside the capture area; outline with a dark halo so it reads on white paper
-      const line = (w: number) => {
+      const line = (w: number, colour = ink) => {
         g.lineWidth = w + 2.5; g.strokeStyle = 'rgba(0,0,0,0.55)'; g.stroke()
-        g.lineWidth = w; g.strokeStyle = ink; g.stroke()
+        g.lineWidth = w; g.strokeStyle = colour; g.stroke()
       }
       if (four) {
         g.fillStyle = 'rgba(0,0,0,0.45)'
@@ -271,8 +279,8 @@ export default function App() {
         path(boardCorners(four, cropRef.current)); line(1.5)
       }
       for (const m of markers) {
-        g.globalAlpha = four?.includes(m) ? 1 : 0.5
-        path(m.corners); line(2)
+        g.globalAlpha = four?.includes(m) ? 1 : 0.6
+        path(m.corners); line(2.5, red)
       }
       g.globalAlpha = 1
 
