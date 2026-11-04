@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Phones only allow camera access over HTTPS. The Pages workflow deploys from `main`: set Pages → Source to **GitHub Actions**, and point the `public/CNAME` subdomain (`ar.materlabs.ie`) at `veryrobert.github.io`.
+Phones only allow camera access over HTTPS. The Pages workflow deploys from `main`: set Pages → Source to **GitHub Actions**, and point the `public/CNAME` subdomain (`scan.materlabs.ie`) at `veryrobert.github.io`.
 
 ## How it works
 
