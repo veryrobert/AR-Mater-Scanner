@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-11-04 — Stop ticked boxes passing as markers
+- Forgiving marker checks (inner shape touching the square, wobbly or broken outline) only apply on a blue sticky note; ticked boxes on a form no longer pass
+- When four or more blue-backed markers are in view, only those are chosen
+- Only the chosen four are held between frames and outlined in red (the best three while searching)
+
 ## 2026-11-04 — Steadier, more forgiving marker detection, red outlines
 - Markers are held for 10 frames (about 0.6s) after they're last seen, so one missed frame no longer drops the count or flickers
 - Live detection runs at 640px instead of 480px, so smaller or further-away markers are found
@@ -14,6 +19,3 @@
 - Export ink as PNG (white or clear), text as .txt, or the index thumbnail
 - Export can email the scan (share sheet, or a mailto draft)
 - Named mater, served from mater.robertfarrelly.com; README covers markers and files
-
-## 2026-10-18 — Thumbnail export
-- Export saves an index thumbnail: 1600 × 1000 (16:10), the work centred on black
