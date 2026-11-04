@@ -11,8 +11,6 @@
  *   4. choose the best 4 markers, order them TL, TR, BR, BL
  *   5. estimate the real aspect ratio and warp with a homography
  */
-(function (global) {
-  'use strict';
 
   // ---------- small geometry helpers ----------
   const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
@@ -493,5 +491,41 @@
     return { ok: true, image: img, corners, aspect, markers, four };
   }
 
-  global.MarkerScanner = { detectMarkers, selectFour, boardCorners, estimateAspect, homography, warp, enhance, rectify };
-})(typeof window !== 'undefined' ? window : globalThis);
+  /**
+   * Ink only: flatten the lighting, then keep the dark strokes and drop the paper.
+   * Returns a new ImageData with transparent background (alpha = ink strength).
+   */
+  function inkOnly(img) {
+    const out = new ImageData(new Uint8ClampedArray(img.data), img.width, img.height);
+    enhance(out);
+    const d = out.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const L = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) / 65280; // 0..1
+      const a = Math.min(1, Math.max(0, (0.82 - L) / 0.32));
+      // deepen the stroke colour a little so faint ink stays legible
+      d[i] = d[i] * 0.7; d[i + 1] = d[i + 1] * 0.7; d[i + 2] = d[i + 2] * 0.7;
+      d[i + 3] = a * 255;
+    }
+    return out;
+  }
+
+  /** Map points with a 3x3 homography (row-major, h[8] = 1). */
+  function applyH(H, p) {
+    const z = H[6] * p.x + H[7] * p.y + H[8];
+    return { x: (H[0] * p.x + H[1] * p.y + H[2]) / z, y: (H[3] * p.x + H[4] * p.y + H[5]) / z };
+  }
+
+  /**
+   * Where each marker (and the sticky note around it) lands in the warped output,
+   * so it can be erased. corners: TL,TR,BR,BL board corners in source px.
+   */
+  function markerRegionsOut(four, scale, corners, outW, outH, grow) {
+    const H = homography(corners, [{ x: 0, y: 0 }, { x: outW, y: 0 }, { x: outW, y: outH }, { x: 0, y: outH }]);
+    const g = grow || 1.6;
+    return four.map(m => m.corners.map(p => {
+      const q = { x: (m.center.x + (p.x - m.center.x) * g) * scale, y: (m.center.y + (p.y - m.center.y) * g) * scale };
+      return applyH(H, q);
+    }));
+  }
+
+export { detectMarkers, selectFour, boardCorners, estimateAspect, homography, warp, enhance, inkOnly, markerRegionsOut, rectify };
