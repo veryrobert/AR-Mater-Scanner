@@ -30,7 +30,7 @@ type Shot = { full: ImageData; four: Marker[]; scale: number }
 type Reading = { state: 'idle' | 'reading' | 'done' | 'error'; text: string; error?: string }
 
 const LIVE_DIM = 640 // live detection size
-const HOLD = 6 // frames a marker is kept after it was last seen
+const HOLD = 10 // frames a marker is kept after it was last seen
 const SHOT_DIM = 800 // detection size for a captured frame
 const KEY = 'scanner.apiKey'
 

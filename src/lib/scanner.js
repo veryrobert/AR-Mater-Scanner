@@ -189,7 +189,7 @@
       if (!quad) continue;
       const qArea = polyArea(quad), hArea = polyArea(hull);
       if (qArea < minSide * minSide) continue;
-      if (qArea / hArea < 0.88) { rej(c, '(qArea / hArea < 0.88)'); continue; } // outline isn't a quadrilateral
+      if (qArea / hArea < 0.84) { rej(c, '(qArea / hArea < 0.84)'); continue; } // outline isn't a quadrilateral
 
       const sides = [0, 1, 2, 3].map(i => dist(quad[i], quad[(i + 1) % 4]));
       if (Math.max(...sides) / Math.min(...sides) > 2.5) { rej(c, '(Math.max(...sides) / Math.min(...sides) > 2.5)'); continue; }
@@ -228,10 +228,12 @@
         }
       }
       const ownC = ownCenter / nCenter, darkC = darkCenter / nCenter, edgeF = ownEdge / nEdge, gapF = lightGap / nGap;
-      if (ownC > 0.08) { rej(c, '(ownC > 0.08)'); continue; }            // must be a ring, not a blob
-      if (edgeF < 0.6) { rej(c, '(edgeF < 0.6)'); continue; }            // border must be solid
-      if (darkC < 0.12 || darkC > 0.95) { rej(c, '(darkC < 0.12 || darkC > 0.95)'); continue; } // glyph inside
-      if (gapF < 0.25) { rej(c, '(gapF < 0.25)'); continue; }
+      // The glyph may be its own component or, where it touches the frame, part of it
+      const glyph = ownC + darkC;
+      if (ownC > 0.6) { rej(c, '(ownC > 0.6)'); continue; }              // must be a ring, not a blob
+      if (edgeF < 0.5) { rej(c, '(edgeF < 0.5)'); continue; }            // border must be mostly solid
+      if (glyph < 0.12 || glyph > 0.95) { rej(c, '(glyph < 0.12 || glyph > 0.95)'); continue; } // glyph inside
+      if (gapF < (ownC > 0.08 ? 0.4 : 0.25)) { rej(c, '(gapF too low)'); continue; } // a touching glyph needs a clear gap elsewhere
 
       // Blue backing (soft score): sample a band just outside the frame
       let blue = 0, nb = 0;
@@ -259,7 +261,7 @@
       q = q.slice(si).concat(q.slice(0, si));
 
       const size = Math.sqrt(qArea);
-      const score = edgeF + gapF * 0.5 + (1 - ownC) * 0.5 + blueF * 1.5 + (darkC > 0.25 && darkC < 0.8 ? 0.5 : 0);
+      const score = edgeF + gapF * 0.5 + (1 - ownC) * 0.5 + blueF * 1.5 + (glyph > 0.25 && glyph < 0.8 ? 0.5 : 0);
       out.push({ corners: q, center: { x: cx, y: cy }, size, score, blue: blueF });
     }
 
