@@ -1,4 +1,4 @@
-# scanner
+# mater
 
 Point your phone at a board marked with the four corner markers (a black square frame with a black glyph inside, on a blue sticky note). The app shows the markers live, takes the photo, straightens it, and gives back:
 
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Phones only allow camera access over HTTPS. The Pages workflow deploys from `main`: set Pages → Source to **GitHub Actions**, and point the `public/CNAME` subdomain (`scanner.robertfarrelly.com`) at `veryrobert.github.io`.
+Phones only allow camera access over HTTPS. The Pages workflow deploys from `main`: set Pages → Source to **GitHub Actions**, and point the `public/CNAME` subdomain (`mater.robertfarrelly.com`) at `veryrobert.github.io`.
 
 ## How it works
 
